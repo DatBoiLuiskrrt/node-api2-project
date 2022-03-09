@@ -72,19 +72,31 @@ router.put("/:id", (req, res) => {
     });
 });
 router.delete("/:id", (req, res) => {
-  const { id } = req.params;
-  Posts.remove(id)
-    .then((deletedUser) => {
-      if (!deletedUser) {
-        res.status(404).json({
-          message: "The post with the specified ID does not exist",
+  Posts.findById(req.params.id)
+    .then((post) => {
+      if (post) {
+        Posts.remove(post.id).then((resp) => {
+          res.status(200).json(post);
         });
       } else {
-        res.json(deletedUser);
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist" });
       }
     })
+    .catch((error) => {
+      res.status(404).json({ message: "The post could not be removed" });
+    });
+});
+
+router.get("/:id/comments", (req, res) => {
+  const { id } = req.params;
+  Posts.findPostComments(id)
+    .then((commentById) => {
+      res.json(commentById);
+    })
     .catch((err) => {
-      res.status(500).json({
+      res.status(404).json({
         message: "The post with the specified ID does not exist",
         error: err.message,
       });
